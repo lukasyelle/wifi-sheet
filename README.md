@@ -10,13 +10,7 @@ The CLI lists the WiFi networks saved on this Mac, lets you pick one or more, an
 go run .
 ```
 
-Pick networks from the list:
-
-```text
-Select one or more (1,3 or all): 1,4
-```
-
-macOS will ask for Keychain access so the script can read the saved WiFi password. If the password is not in Keychain, the CLI asks you to type it.
+A filterable list of saved networks appears. Type `/` to search, space to toggle networks, and enter to generate. macOS will ask for Keychain access so the script can read the saved WiFi password. If the password is not in Keychain, the CLI asks you to type it. Each finished PDF opens in Preview.
 
 Write sheets to another folder:
 
