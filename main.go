@@ -32,10 +32,10 @@ func run(args []string, in io.Reader, out, errOut io.Writer) error {
 	fs.SetOutput(errOut)
 	fs.Usage = func() {
 		fmt.Fprintf(errOut, "Usage: wifi-sheet [-o dir]\n\n")
-		fmt.Fprintf(errOut, "Generate US Letter PDFs with a scannable WiFi QR code.\n")
+		fmt.Fprintf(errOut, "Generate a US Letter PDF with scannable WiFi QR codes.\n")
 		fs.PrintDefaults()
 	}
-	outDir := fs.String("o", ".", "directory to write PDF files")
+	outDir := fs.String("o", ".", "directory to write the PDF file")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -61,10 +61,10 @@ func run(args []string, in io.Reader, out, errOut io.Writer) error {
 	}
 
 	if len(selected) > 1 {
-		fmt.Fprintf(errOut, "Generating %d sheets. Allow Keychain access if macOS asks.\n", len(selected))
+		fmt.Fprintf(errOut, "Building one sheet with %d networks. Allow Keychain access if macOS asks.\n", len(selected))
 	}
 
-	written := make([]string, 0, len(selected))
+	entries := make([]sheet.Network, 0, len(selected))
 	for _, ssid := range selected {
 		password, err := passwordFor(ssid, errOut)
 		if err != nil {
@@ -78,28 +78,25 @@ func run(args []string, in io.Reader, out, errOut io.Writer) error {
 		if err != nil {
 			return fmt.Errorf("%s: %w", ssid, err)
 		}
-
-		path, err := sheet.UniquePath(*outDir, sheet.Filename(ssid))
-		if err != nil {
-			return fmt.Errorf("%s: %w", ssid, err)
-		}
-		if err := sheet.WriteFile(path, ssid, qrPNG, assets.Background); err != nil {
-			return fmt.Errorf("%s: %w", ssid, err)
-		}
-
-		abs, err := filepath.Abs(path)
-		if err != nil {
-			abs = path
-		}
-		fmt.Fprintf(out, "Wrote %s\n", abs)
-		written = append(written, abs)
+		entries = append(entries, sheet.Network{SSID: ssid, QRPNG: qrPNG})
 	}
 
-	if err := preview.Open(written...); err != nil {
+	path, err := sheet.UniquePath(*outDir, sheet.Filename(selected...))
+	if err != nil {
 		return err
 	}
-	if len(written) > 1 {
-		fmt.Fprintf(out, "Wrote %d sheets.\n", len(written))
+	if err := sheet.WriteFile(path, entries, assets.Background); err != nil {
+		return err
+	}
+
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = path
+	}
+	fmt.Fprintf(out, "Wrote %s\n", abs)
+
+	if err := preview.Open(abs); err != nil {
+		return err
 	}
 	return nil
 }
