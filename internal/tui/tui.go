@@ -19,7 +19,7 @@ func SelectNetworks(ssids []string) ([]string, error) {
 	var selected []string
 	field := huh.NewMultiSelect[string]().
 		Title("Saved WiFi networks").
-		Description("Type / to filter. Space toggles. Enter generates the sheet.").
+		Description("Type / to filter. Space toggles. Enter puts every selected network on one sheet.").
 		Options(huh.NewOptions(ssids...)...).
 		Value(&selected).
 		Filterable(true).
